@@ -10,15 +10,17 @@ export default async function RunPage({
   params,
   searchParams,
 }: {
-  params: { id: string };
-  searchParams: { demo?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ demo?: string }>;
 }) {
+  const { id } = await params;
+  const { demo } = await searchParams;
   const supabase = db();
 
   const { data: run } = await supabase
     .from("tc_runs")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .maybeSingle();
 
   if (!run) notFound();
@@ -55,11 +57,14 @@ export default async function RunPage({
 
   const rows = (results ?? []) as Result[];
   const rate = r.total ? Math.round((r.passed / r.total) * 100) : 0;
-  const isDemo = searchParams.demo === "1";
+  const isDemo = demo === "1";
 
   const failing = rows
     .filter((x) => !x.passed)
-    .map((x) => `${x.case_name}${x.flags.length ? ` [${x.flags.join(", ")}]` : ""}`)
+    .map(
+      (x) =>
+        `${x.case_name}${x.flags.length ? ` [${x.flags.join(", ")}]` : ""}`,
+    )
     .join("; ");
   const aiSummary =
     `Run "${r.label}" on ${r.model ?? "n/a"} (prompt ${r.prompt_version ?? "n/a"}): ` +
@@ -105,7 +110,9 @@ export default async function RunPage({
                 .toISOString()
                 .slice(0, 16)
                 .replace("T", " ")}
-              {prev ? ` · diffed vs "${(prev as { label: string }).label}"` : ""}
+              {prev
+                ? ` · diffed vs "${(prev as { label: string }).label}"`
+                : ""}
             </p>
           </div>
           <Gauge rate={rate} />
@@ -276,7 +283,9 @@ function Tag({
     bad: "bg-bad/15 text-bad",
     warn: "bg-warn/15 text-warn",
   }[tone];
-  return <span className={`rounded px-2 py-0.5 font-medium ${cls}`}>{children}</span>;
+  return (
+    <span className={`rounded px-2 py-0.5 font-medium ${cls}`}>{children}</span>
+  );
 }
 
 function Field({ label, value }: { label: string; value: string }) {
