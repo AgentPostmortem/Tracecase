@@ -82,7 +82,17 @@ export default async function RunPage({
 
       {isDemo && (
         <div className="flex items-start gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4">
-          <span className="mt-0.5 text-accent">✦</span>
+          <span className="mt-0.5 text-accent">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M8 1.5c.5 2.9 1.8 4.7 4.7 5.2v.6c-2.9.5-4.2 2.3-4.7 5.2h-.6c-.5-2.9-1.8-4.7-4.7-5.2v-.6c2.9-.5 4.2-2.3 4.7-5.2h.6ZM13.2 10.5c.25 1.35.85 2.2 2.2 2.45v.4c-1.35.25-1.95 1.1-2.2 2.45h-.4c-.25-1.35-.85-2.2-2.2-2.45v-.4c1.35-.25 1.95-1.1 2.2-2.45h.4Z" />
+            </svg>
+          </span>
           <div className="text-[13px]">
             <div className="font-medium text-text">
               This is the eval run you just triggered.
@@ -230,7 +240,12 @@ export default async function RunPage({
 }
 
 function Gauge({ rate }: { rate: number }) {
-  const ring = rate === 100 ? "#3fb950" : rate >= 75 ? "#e3a008" : "#f85149";
+  const ring =
+    rate === 100
+      ? "rgb(var(--good))"
+      : rate >= 75
+        ? "rgb(var(--warn))"
+        : "rgb(var(--bad))";
   const tone =
     rate === 100 ? "text-good" : rate >= 75 ? "text-warn" : "text-bad";
   return (

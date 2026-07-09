@@ -7,7 +7,7 @@ function Mark() {
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <path
           d="M4 18V6m0 12 5-5 4 3 7-8"
-          stroke="#08080a"
+          stroke="#0d0c0a"
           strokeWidth="2.4"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -21,7 +21,7 @@ const links = [
   { href: "/", label: "Dashboard" },
   { href: "/about", label: "About" },
   { href: "/help", label: "Help" },
-  { href: "/api/runs", label: "API" },
+  { href: "/api/runs", label: "API (JSON)" },
 ];
 
 // Desktop: fixed left rail. Mobile: a compact top bar (rendered separately).

@@ -39,7 +39,18 @@ export function DemoButton() {
       ) : state === "done" ? (
         "Run recorded ✓"
       ) : (
-        "▶ Run a demo eval"
+        <>
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 12 12"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M2.5 1.7a.6.6 0 0 1 .9-.52l7 4.3a.6.6 0 0 1 0 1.04l-7 4.3a.6.6 0 0 1-.9-.52V1.7Z" />
+          </svg>
+          Run a demo eval
+        </>
       )}
     </button>
   );

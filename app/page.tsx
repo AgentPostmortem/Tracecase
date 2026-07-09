@@ -59,7 +59,7 @@ export default async function Home({
               agent reliability
             </span>
             <h1 className="gradient-text mt-4 text-balance text-4xl font-semibold tracking-tight sm:text-[3rem]">
-              CI for your AI agents.
+              CI for your <em className="font-display font-normal">AI agents</em>.
             </h1>
             <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
               Every prompt or model change is replayed against your test suites.
@@ -374,7 +374,12 @@ function HeroSignal({
 function Gauge({ rate, size = "sm" }: { rate: number; size?: "sm" | "lg" }) {
   const tone =
     rate === 100 ? "text-good" : rate >= 75 ? "text-warn" : "text-bad";
-  const ring = rate === 100 ? "#3fb950" : rate >= 75 ? "#e3a008" : "#f85149";
+  const ring =
+    rate === 100
+      ? "rgb(var(--good))"
+      : rate >= 75
+        ? "rgb(var(--warn))"
+        : "rgb(var(--bad))";
   const frame = size === "lg" ? "h-32 w-32" : "h-14 w-14";
   const inner = size === "lg" ? "h-24 w-24" : "h-11 w-11";
   const text = size === "lg" ? "text-2xl" : "text-[13px]";
@@ -383,7 +388,7 @@ function Gauge({ rate, size = "sm" }: { rate: number; size?: "sm" | "lg" }) {
       <div
         className={`rounded-full ${frame}`}
         style={{
-          background: `conic-gradient(${ring} ${rate * 3.6}deg, #26262e 0deg)`,
+          background: `conic-gradient(${ring} ${rate * 3.6}deg, rgb(var(--border)) 0deg)`,
         }}
       />
       <div className={`absolute grid place-items-center rounded-full bg-surface ${inner}`}>

@@ -2,24 +2,46 @@ import Link from "next/link";
 
 export const metadata = { title: "About: Tracecase" };
 
+function FeatureIcon({ d }: { d: string }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={d} />
+    </svg>
+  );
+}
+
 const features = [
   {
-    icon: "◉",
+    // Record dot: capture everything.
+    icon: <FeatureIcon d="M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12Zm0-3.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />,
     title: "Records every run",
     body: "Inputs, outputs, tool calls, latency and pass/fail for each case in a suite.",
   },
   {
-    icon: "⇄",
+    // Arrows: compare against the previous run.
+    icon: <FeatureIcon d="M2 5.5h9.5m0 0L9 3m2.5 2.5L9 8m5 2.5H4.5m0 0L7 8m-2.5 2.5L7 13" />,
     title: "Diffs vs the last run",
     body: "Every run is compared to the previous one to find exactly what changed.",
   },
   {
-    icon: "⚑",
+    // Flag: surface what regressed.
+    icon: <FeatureIcon d="M3.5 14V2.5m0 0h8.2l-2 3 2 3H3.5" />,
     title: "Flags regressions",
     body: "Cases that newly fail, hallucinate, or make an unsafe tool call are surfaced.",
   },
   {
-    icon: "⛔",
+    // Block: stop the bad change.
+    icon: <FeatureIcon d="M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12ZM3.8 3.8l8.4 8.4" />,
     title: "Gates the merge",
     body: "Returns shouldFail so your CI blocks a bad prompt or model change.",
   },
