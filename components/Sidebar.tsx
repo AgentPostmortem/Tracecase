@@ -7,7 +7,7 @@ function Mark() {
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <path
           d="M4 18V6m0 12 5-5 4 3 7-8"
-          stroke="#0d0c0a"
+          stroke="#04231a"
           strokeWidth="2.4"
           strokeLinecap="round"
           strokeLinejoin="round"

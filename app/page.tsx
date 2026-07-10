@@ -59,7 +59,7 @@ export default async function Home({
               agent reliability
             </span>
             <h1 className="gradient-text mt-4 text-balance text-4xl font-semibold tracking-tight sm:text-[3rem]">
-              CI for your <em className="font-display font-normal">AI agents</em>.
+              CI for your <em className="font-display font-normal not-italic">AI&nbsp;agents</em>.
             </h1>
             <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
               Every prompt or model change is replayed against your test suites.

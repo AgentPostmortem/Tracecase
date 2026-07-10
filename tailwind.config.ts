@@ -31,7 +31,14 @@ const config: Config = {
           "Segoe UI",
           "sans-serif",
         ],
-        display: ["var(--font-display)", "Georgia", "serif"],
+        // Tracecase leans into its terminal identity: display = mono.
+        display: [
+          "var(--font-mono)",
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "monospace",
+        ],
         mono: [
           "var(--font-mono)",
           "ui-monospace",

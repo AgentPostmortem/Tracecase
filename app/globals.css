@@ -2,40 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dark is the default theme: warm near-black with copper accents. */
+/* Tracecase brand: technical, precise. Dark is the default theme: neutral
+   near-black with emerald "CI pass" accents. */
 :root {
-  --bg: 13 12 10;
-  --surface: 18 17 16;
-  --surface-2: 26 24 21;
-  --border: 42 40 36;
-  --border-soft: 31 29 26;
-  --muted: 157 149 136;
-  --text: 239 236 229;
-  --accent: 201 163 92;
-  --accent-2: 226 194 136;
-  --good: 118 179 122;
-  --bad: 235 111 101;
-  --warn: 224 178 96;
-  --glow-1: 201 163 92;
-  --glow-2: 226 194 136;
+  --bg: 11 13 12;
+  --surface: 17 20 18;
+  --surface-2: 24 28 26;
+  --border: 44 51 47;
+  --border-soft: 31 37 34;
+  --muted: 148 158 152;
+  --text: 230 236 232;
+  --accent: 52 211 153;
+  --accent-2: 110 231 183;
+  --good: 52 211 153;
+  --bad: 248 113 113;
+  --warn: 229 170 70;
+  --glow-1: 52 211 153;
+  --glow-2: 16 185 129;
   color-scheme: dark;
 }
 
 [data-theme="light"] {
-  --bg: 249 247 242;
-  --surface: 255 254 251;
-  --surface-2: 243 239 231;
-  --border: 226 220 208;
-  --border-soft: 235 230 220;
-  --muted: 122 113 98;
-  --text: 36 32 26;
-  --accent: 158 118 48;
-  --accent-2: 128 94 36;
-  --good: 22 134 60;
-  --bad: 190 52 44;
-  --warn: 166 112 16;
-  --glow-1: 201 163 92;
-  --glow-2: 226 194 136;
+  --bg: 245 248 246;
+  --surface: 255 255 255;
+  --surface-2: 234 240 236;
+  --border: 209 219 213;
+  --border-soft: 223 231 226;
+  --muted: 86 102 93;
+  --text: 19 28 23;
+  --accent: 4 120 87;
+  --accent-2: 6 95 70;
+  --good: 4 120 87;
+  --bad: 185 28 28;
+  --warn: 146 96 10;
+  --glow-1: 52 211 153;
+  --glow-2: 110 231 183;
   color-scheme: light;
 }
 
