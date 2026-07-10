@@ -221,24 +221,27 @@ function Pagination({
 }) {
   const linkCls =
     "rounded-lg border border-border bg-surface px-3 py-1.5 text-[13px] transition hover:border-accent/50 hover:text-text";
-  const disabled = "pointer-events-none opacity-40";
+  // At either edge the control is omitted entirely (empty spacer keeps the
+  // layout): no dimmed pseudo-link to fail contrast or confuse keyboard users.
   return (
     <nav className="flex items-center justify-between pt-1 text-muted">
-      <a
-        href={`/?page=${page - 1}`}
-        className={`${linkCls} ${page <= 1 ? disabled : ""}`}
-      >
-        ← Newer
-      </a>
+      {page <= 1 ? (
+        <span aria-hidden="true" />
+      ) : (
+        <a href={`/?page=${page - 1}`} className={linkCls}>
+          ← Newer
+        </a>
+      )}
       <span className="text-[12px]">
         Page {page} of {totalPages}
       </span>
-      <a
-        href={`/?page=${page + 1}`}
-        className={`${linkCls} ${page >= totalPages ? disabled : ""}`}
-      >
-        Older →
-      </a>
+      {page >= totalPages ? (
+        <span aria-hidden="true" />
+      ) : (
+        <a href={`/?page=${page + 1}`} className={linkCls}>
+          Older →
+        </a>
+      )}
     </nav>
   );
 }
