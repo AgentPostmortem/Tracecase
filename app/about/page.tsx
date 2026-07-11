@@ -88,7 +88,7 @@ export default function About() {
           explains any run in plain English.
         </p>
         <div className="mt-4 flex flex-wrap gap-2 text-[12px]">
-          {["Next.js", "Cloudflare Workers", "Supabase", "n8n", "Ollama"].map(
+          {["Next.js", "Cloudflare Workers", "Supabase", "n8n", "Groq"].map(
             (t) => (
               <span
                 key={t}
