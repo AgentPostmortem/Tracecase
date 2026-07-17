@@ -3,6 +3,12 @@
 CI for AI agents. Record agent runs, replay them against prompt and model
 changes, and catch regressions and unsafe tool calls before they ship.
 
+## Demo
+
+[![Tracecase demo](assets/demo-thumb.png)](assets/demo.mp4)
+
+▶ [Watch the demo](assets/demo.mp4) · Live: https://tracecase.agentpostmortem.com
+
 Most teams ship agents with no way to know a prompt or model bump didn't quietly
 break behavior. Tracecase is the missing test layer: your CI posts a run after
 every change, Tracecase diffs it against the previous run of the same suite, and
