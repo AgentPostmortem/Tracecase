@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --test --no-warnings lib/validate-ingest.test.ts",
     "cf:build": "NODE_OPTIONS=--no-deprecation opennextjs-cloudflare build",
     "cf:preview": "NODE_OPTIONS=--no-deprecation opennextjs-cloudflare build && NODE_OPTIONS=--no-deprecation opennextjs-cloudflare preview",
     "deploy": "NODE_OPTIONS=--no-deprecation opennextjs-cloudflare build && NODE_OPTIONS=--no-deprecation opennextjs-cloudflare deploy"

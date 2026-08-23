@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, checkIngestToken } from "@/lib/supabase";
+import { validateIngestPayload } from "@/lib/validate-ingest";
 import type { IngestPayload } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -23,7 +24,7 @@ export async function GET() {
           output: "string (optional)",
           expected: "string (optional)",
         },
-      ],
+      ], // required; must contain at least one result
     },
     returns: { ok: true, runId: "uuid", regressed: 0, flagged: 0, shouldFail: false },
   });
@@ -45,11 +46,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
-  if (!body.suite || !body.label || !Array.isArray(body.results)) {
-    return NextResponse.json(
-      { error: "suite, label and results[] are required" },
-      { status: 400 },
-    );
+  const validation = validateIngestPayload(body);
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
   const supabase = db();
