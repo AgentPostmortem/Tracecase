@@ -25,6 +25,7 @@ export async function GET() {
         },
       ],
     },
+    validation: { results: "must contain at least one result" },
     returns: { ok: true, runId: "uuid", regressed: 0, flagged: 0, shouldFail: false },
   });
 }
@@ -51,6 +52,13 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  if (body.results.length === 0) {
+    return NextResponse.json(
+      { error: "results[] must not be empty" },
+      { status: 400 },
+    );
+  }
+
   if (body.results.length === 0) {
     return NextResponse.json(
       { error: "results[] must not be empty" },
