@@ -22,12 +22,30 @@ export async function GET() {
           flags: "string[] (optional)",
           output: "string (optional)",
           expected: "string (optional)",
+          latencyMs: "number (optional, enables latency regression detection)",
         },
       ],
     },
     validation: { results: "must contain at least one result" },
-    returns: { ok: true, runId: "uuid", regressed: 0, flagged: 0, shouldFail: false },
+    returns: {
+      ok: true,
+      runId: "uuid",
+      regressed: 0,
+      flagged: 0,
+      latencyRegression: 0,
+      shouldFail: false,
+    },
   });
+}
+
+// Median of the reported latencies, or null when no case reported one.
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 // POST /api/runs, a CI job posts one run of a suite after a prompt/model change.
@@ -96,22 +114,47 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   const prevPass = new Map<string, boolean>();
+  const prevLatency = new Map<string, number>();
   if (prevRun) {
     const { data: prevResults } = await supabase
       .from("tc_results")
-      .select("case_name, passed")
+      .select("case_name, passed, latency_ms")
       .eq("run_id", (prevRun as { id: string }).id);
     for (const x of prevResults ?? []) {
       prevPass.set(
         (x as { case_name: string }).case_name,
         (x as { passed: boolean }).passed,
       );
+      const latency = (x as { latency_ms: number | null }).latency_ms;
+      if (latency != null) {
+        prevLatency.set((x as { case_name: string }).case_name, latency);
+      }
     }
   }
 
   const total = body.results.length;
   const passed = body.results.filter((r) => r.passed).length;
-  const flagged = body.results.filter((r) => (r.flags?.length ?? 0) > 0).length;
+
+  // Latency regression: a case is flagged when it is over 3x slower than the
+  // previous run, and also when the suite p50 more than doubles (catching
+  // uniform slowdowns no single case hits 3x on its own). Cases without a
+  // comparable previous latency are never flagged.
+  const currentP50 = median(
+    body.results.map((r) => r.latencyMs).filter((v): v is number => v != null),
+  );
+  const prevP50 = median([...prevLatency.values()]);
+  const suiteSlow =
+    currentP50 != null && prevP50 != null && prevP50 > 0 && currentP50 > prevP50 * 2;
+
+  const latencyFlagged = body.results.map((r) => {
+    const prevMs = prevLatency.get(r.caseName);
+    if (prevMs == null || prevMs <= 0 || r.latencyMs == null) return false;
+    return r.latencyMs > prevMs * 3 || (suiteSlow && r.latencyMs > prevMs);
+  });
+
+  const flagged = body.results.filter(
+    (r, i) => (r.flags?.length ?? 0) > 0 || latencyFlagged[i],
+  ).length;
   const regressed = body.results.filter(
     (r) => prevPass.get(r.caseName) === true && !r.passed,
   ).length;
@@ -139,7 +182,7 @@ export async function POST(req: NextRequest) {
   }
   const runId = (run as { id: string }).id;
 
-  const rows = body.results.map((r) => ({
+  const rows = body.results.map((r, i) => ({
     run_id: runId,
     case_name: r.caseName,
     input: r.input ?? null,
@@ -147,9 +190,17 @@ export async function POST(req: NextRequest) {
     expected: r.expected ?? null,
     tool_calls: r.toolCalls ?? null,
     passed: r.passed,
-    flags: r.flags ?? [],
+    // Persist the latency regression as a regular flag so the run page and
+    // the flagged count surface it without a schema change.
+    flags:
+      latencyFlagged[i] && !(r.flags ?? []).includes("latency_regression")
+        ? [...(r.flags ?? []), "latency_regression"]
+        : (r.flags ?? []),
     latency_ms: r.latencyMs ?? null,
   }));
+  const latencyRegression = rows.filter((r) =>
+    r.flags.includes("latency_regression"),
+  ).length;
 
   const { error: resErr } = await supabase.from("tc_results").insert(rows);
   if (resErr) {
@@ -179,6 +230,7 @@ export async function POST(req: NextRequest) {
     passed,
     regressed,
     flagged,
+    latencyRegression,
     // CI convention: non-zero regressions or flags should fail the build.
     shouldFail: regressed > 0 || flagged > 0,
   });
