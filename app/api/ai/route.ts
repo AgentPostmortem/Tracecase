@@ -19,6 +19,23 @@ function cleanReply(reply?: string): string {
     .trim();
 }
 
+type HistoryEntry = { role: "user" | "assistant"; content: string };
+
+function isHistoryEntry(entry: unknown): entry is HistoryEntry {
+  if (!entry || typeof entry !== "object") return false;
+  const candidate = entry as { role?: unknown; content?: unknown };
+  return (
+    (candidate.role === "user" || candidate.role === "assistant") &&
+    typeof candidate.content === "string"
+  );
+}
+
+function validateHistory(history: unknown): HistoryEntry[] | undefined {
+  if (history === undefined) return [];
+  if (!Array.isArray(history)) return undefined;
+  return history.every(isHistoryEntry) ? history : undefined;
+}
+
 function fixedReply(prompt: string): string | undefined {
   const question = prompt.trim().toLowerCase().replace(/[?!.,]+$/, "");
   if (/^(hi|hello|hey|hi there|hello there)$/.test(question)) {
@@ -42,7 +59,7 @@ export async function OPTIONS() {
 export async function POST(req: NextRequest) {
   const { prompt, history, max } = (await req.json().catch(() => ({}))) as {
     prompt?: string;
-    history?: { role: string; content: string }[];
+    history?: unknown;
     max?: number;
   };
   if (!prompt) {
@@ -51,6 +68,20 @@ export async function POST(req: NextRequest) {
       { status: 400, headers: CORS },
     );
   }
+  const validatedHistory = validateHistory(history);
+  if (!validatedHistory) {
+    return NextResponse.json(
+      {
+        error: "invalid history",
+        validation: {
+          history:
+            "must be an array of entries with role 'user' or 'assistant' and string content",
+        },
+      },
+      { status: 400, headers: CORS },
+    );
+  }
+
   const fixed = fixedReply(prompt);
   if (fixed) return NextResponse.json({ reply: fixed }, { headers: CORS });
 
@@ -62,7 +93,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const convo = (Array.isArray(history) ? history.slice(-4) : [])
+  const convo = validatedHistory
+    .slice(-4)
     .map((m) =>
       `${m.role === "assistant" ? "Previous answer" : "Previous question"}: ${m.content}`,
     )
