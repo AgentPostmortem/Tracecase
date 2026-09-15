@@ -70,6 +70,12 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  if (body.results.length === 0) {
+    return NextResponse.json(
+      { error: "results[] must not be empty" },
+      { status: 400 },
+    );
+  }
 
   if (body.results.length === 0) {
     return NextResponse.json(
