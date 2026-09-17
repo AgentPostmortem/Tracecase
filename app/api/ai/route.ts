@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     history?: unknown;
     max?: number;
   };
-  if (!prompt) {
+  if (typeof prompt !== "string" || !prompt) {
     return NextResponse.json(
       { error: "prompt required" },
       { status: 400, headers: CORS },

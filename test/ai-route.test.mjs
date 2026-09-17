@@ -78,3 +78,15 @@ test("POST /api/ai rejects malformed history entries before fixed replies", asyn
     },
   });
 });
+
+test("POST /api/ai rejects a non-string prompt with 400", async (t) => {
+  const origin = await startServer(t);
+
+  const response = await fetch(`${origin}/api/ai`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ prompt: 123 }),
+  });
+
+  assert.equal(response.status, 400);
+});
