@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_URL =
+  process.env.GROQ_API_URL ?? "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 const SYSTEM =
   "You are the assistant for Tracecase, a CI / eval harness for AI agents. " +
@@ -122,6 +123,12 @@ export async function POST(req: NextRequest) {
       choices?: { message?: { content?: string } }[];
       error?: { message?: string };
     };
+    if (!r.ok || (d.error && !d.choices?.length)) {
+      return NextResponse.json(
+        { error: d.error?.message ?? "AI upstream error" },
+        { status: 502, headers: CORS },
+      );
+    }
     return NextResponse.json(
       {
         reply: cleanReply(d.choices?.[0]?.message?.content),

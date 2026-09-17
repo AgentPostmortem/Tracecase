@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
+import { createServer as createHttpServer } from "node:http";
 import test from "node:test";
 
 async function availablePort() {
@@ -15,7 +16,7 @@ async function availablePort() {
   return port;
 }
 
-async function startServer(t) {
+async function startServer(t, extraEnv = {}) {
   const port = await availablePort();
   const child = spawn(
     process.execPath,
@@ -31,6 +32,7 @@ async function startServer(t) {
       env: {
         ...process.env,
         GROQ_API_KEY: "test-key",
+        ...extraEnv,
       },
       stdio: ["ignore", "pipe", "pipe"],
     },
@@ -58,6 +60,24 @@ async function startServer(t) {
     });
   });
 
+  return `http://127.0.0.1:${port}`;
+}
+
+async function startGroqMock(t, payload) {
+  const server = createHttpServer((req, res) => {
+    let raw = "";
+    req.on("data", (chunk) => (raw += chunk));
+    req.on("end", () => {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(payload));
+    });
+  });
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const { port } = server.address();
+  t.after(() => server.close());
   return `http://127.0.0.1:${port}`;
 }
 
@@ -89,4 +109,18 @@ test("POST /api/ai rejects a non-string prompt with 400", async (t) => {
   });
 
   assert.equal(response.status, 400);
+});
+
+test("POST /api/ai maps an upstream error payload to a non-2xx response", async (t) => {
+  const groq = await startGroqMock(t, { error: { message: "invalid api key" } });
+  const origin = await startServer(t, { GROQ_API_URL: groq });
+
+  const response = await fetch(`${origin}/api/ai`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ prompt: "what is tracecase?" }),
+  });
+
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { error: "invalid api key" });
 });
