@@ -193,7 +193,7 @@ function startFakeSupabase(t) {
     });
   });
   t.after(() => server.close());
-  return { server, runs, results };
+  return { server, suites, runs, results };
 }
 
 test(
@@ -249,5 +249,62 @@ test(
       (row) => row.run_id === slower.runId,
     );
     assert.deepEqual(flaggedRow.flags, ["latency_regression"]);
+  },
+);
+
+test(
+  "dashboard pagination navigates to page 2 when searchParams is awaited",
+  async (t) => {
+    const fake = startFakeSupabase(t);
+    await new Promise((resolve) =>
+      fake.server.listen(0, "127.0.0.1", resolve),
+    );
+    const upstream = `http://127.0.0.1:${fake.server.address().port}`;
+    const origin = await startServer(t, {
+      SUPABASE_URL: upstream,
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+    });
+
+    const suiteId = "00000000-0000-4000-8000-000000000001";
+    fake.suites.push({
+      id: suiteId,
+      name: "pagination-suite",
+      description: "Pagination test suite",
+      created_at: new Date(1000).toISOString(),
+    });
+
+    const baseTime = Date.now();
+    for (let i = 1; i <= 15; i++) {
+      fake.runs.push({
+        id: `00000000-0000-4000-8000-${String(i + 1).padStart(12, "0")}`,
+        suite_id: suiteId,
+        label: `run-${String(i).padStart(2, "0")}`,
+        passed: 1,
+        total: 1,
+        regressed: 0,
+        flagged: 0,
+        created_at: new Date(baseTime + i * 1000).toISOString(),
+      });
+    }
+
+    const page1 = await fetch(`${origin}/`);
+    assert.equal(page1.status, 200);
+    const html1 = await page1.text();
+    assert.match(
+      html1,
+      /Page(?:\s|<!-- -->)*1(?:\s|<!-- -->)*of(?:\s|<!-- -->)*2/,
+    );
+    assert.match(html1, /run-04/);
+    assert.doesNotMatch(html1, /run-01/);
+
+    const page2 = await fetch(`${origin}/?page=2`);
+    assert.equal(page2.status, 200);
+    const html2 = await page2.text();
+    assert.match(
+      html2,
+      /Page(?:\s|<!-- -->)*2(?:\s|<!-- -->)*of(?:\s|<!-- -->)*2/,
+    );
+    assert.match(html2, /run-01/);
+    assert.doesNotMatch(html2, /run-04/);
   },
 );

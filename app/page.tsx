@@ -15,8 +15,9 @@ const PER_PAGE = 12;
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
+  const { page: pageParam } = (await searchParams) ?? {};
   const supabase = db();
   const { data: suites } = await supabase
     .from("tc_suites")
@@ -42,7 +43,7 @@ export default async function Home({
   const totalRegressions = allRuns.reduce((a, r) => a + r.regressed, 0);
   const totalFlagged = allRuns.reduce((a, r) => a + r.flagged, 0);
 
-  const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const totalPages = Math.max(1, Math.ceil(totalRuns / PER_PAGE));
   const pageRuns = allRuns.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
