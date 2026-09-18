@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_URL =
+  process.env.GROQ_API_URL ?? "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 const SYSTEM =
   "You are the assistant for Tracecase, a CI / eval harness for AI agents. " +
@@ -100,7 +101,10 @@ export async function POST(req: NextRequest) {
     )
     .join("\n");
   const full = convo ? `${convo}\nCurrent question: ${prompt}` : prompt;
-  const outputMax = Math.min(Math.max(max ?? 140, 32), 220);
+  const rawMax = typeof max === "number" ? max : NaN;
+  const outputMax = Number.isFinite(rawMax)
+    ? Math.min(Math.max(rawMax, 32), 220)
+    : 140;
 
   try {
     const r = await fetch(GROQ_URL, {
