@@ -88,12 +88,14 @@ async function startServer(t, extraEnv = {}) {
 }
 
 async function startGroqMock(t, payload) {
+  let receivedBody;
   const server = createHttpServer((req, res) => {
     let raw = "";
     req.on("data", (chunk) => (raw += chunk));
     req.on("end", () => {
+      receivedBody = JSON.parse(raw);
       res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify(payload));
+      res.end(JSON.stringify(payload ?? { choices: [{ message: { content: "ok" } }] }));
     });
   });
   await new Promise((resolve, reject) => {
@@ -102,8 +104,9 @@ async function startGroqMock(t, payload) {
   });
   const { port } = server.address();
   t.after(() => server.close());
-  return `http://127.0.0.1:${port}`;
+  return { url: `http://127.0.0.1:${port}`, getBody: () => receivedBody };
 }
+
 
 test("POST /api/ai rejects malformed history entries before fixed replies", async (t) => {
   const origin = await startServer(t);
@@ -137,7 +140,7 @@ test("POST /api/ai rejects a non-string prompt with 400", async (t) => {
 
 test("POST /api/ai maps an upstream error payload to a non-2xx response", async (t) => {
   const groq = await startGroqMock(t, { error: { message: "invalid api key" } });
-  const origin = await startServer(t, { GROQ_API_URL: groq });
+  const origin = await startServer(t, { GROQ_API_URL: groq.url });
 
   const response = await fetch(`${origin}/api/ai`, {
     method: "POST",
@@ -147,4 +150,21 @@ test("POST /api/ai maps an upstream error payload to a non-2xx response", async 
 
   assert.equal(response.status, 502);
   assert.deepEqual(await response.json(), { error: "invalid api key" });
+});
+
+test("POST /api/ai coerces non-numeric max to a numeric max_tokens", async (t) => {
+  const groq = await startGroqMock(t);
+  const origin = await startServer(t, { GROQ_API_URL: groq.url });
+
+  const response = await fetch(`${origin}/api/ai`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ prompt: "what is tracecase?", max: "abc" }),
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).reply, "ok");
+  const sent = groq.getBody();
+  assert.equal(typeof sent.max_tokens, "number");
+  assert.ok(Number.isFinite(sent.max_tokens), `expected finite max_tokens, got ${sent.max_tokens}`);
 });

@@ -101,7 +101,10 @@ export async function POST(req: NextRequest) {
     )
     .join("\n");
   const full = convo ? `${convo}\nCurrent question: ${prompt}` : prompt;
-  const outputMax = Math.min(Math.max(max ?? 140, 32), 220);
+  const rawMax = typeof max === "number" ? max : NaN;
+  const outputMax = Number.isFinite(rawMax)
+    ? Math.min(Math.max(rawMax, 32), 220)
+    : 140;
 
   try {
     const r = await fetch(GROQ_URL, {
