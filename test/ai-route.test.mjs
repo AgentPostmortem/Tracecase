@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { createServer } from "node:net";
+import { connect, createServer } from "node:net";
 import { createServer as createHttpServer } from "node:http";
 import test from "node:test";
 
@@ -14,6 +14,28 @@ async function availablePort() {
   const port = typeof address === "object" && address ? address.port : 0;
   await new Promise((resolve) => server.close(resolve));
   return port;
+}
+
+async function waitForAccepting(port, timeoutMs = 20_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const accepted = await new Promise((resolve) => {
+      const socket = connect(port, "127.0.0.1");
+      socket.once("connect", () => {
+        socket.destroy();
+        resolve(true);
+      });
+      socket.once("error", () => {
+        socket.destroy();
+        resolve(false);
+      });
+    });
+    if (accepted) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error(`server did not start accepting connections on port ${port}`);
 }
 
 async function startServer(t, extraEnv = {}) {
@@ -59,6 +81,8 @@ async function startServer(t, extraEnv = {}) {
       reject(new Error(`Next.js exited with code ${code}:\n${output}`));
     });
   });
+
+  await waitForAccepting(port);
 
   return `http://127.0.0.1:${port}`;
 }
