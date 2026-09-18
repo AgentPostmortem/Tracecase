@@ -126,6 +126,12 @@ export async function POST(req: NextRequest) {
       choices?: { message?: { content?: string } }[];
       error?: { message?: string };
     };
+    if (!r.ok || (d.error && !d.choices?.length)) {
+      return NextResponse.json(
+        { error: d.error?.message ?? "AI upstream error" },
+        { status: 502, headers: CORS },
+      );
+    }
     return NextResponse.json(
       {
         reply: cleanReply(d.choices?.[0]?.message?.content),
